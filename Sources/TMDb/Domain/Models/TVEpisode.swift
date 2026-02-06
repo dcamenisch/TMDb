@@ -43,6 +43,11 @@ public struct TVEpisode: Identifiable, Codable, Equatable, Hashable, Sendable {
     public let airDate: Date?
 
     ///
+    /// TV episode runtime.
+    ///
+    public let runtime: Int?
+
+    ///
     /// TV episode production code.
     ///
     public let productionCode: String?
@@ -84,6 +89,7 @@ public struct TVEpisode: Identifiable, Codable, Equatable, Hashable, Sendable {
     ///    - seasonNumber: TV episode season number.
     ///    - overview: TV episode overview.
     ///    - airDate: TV episode air date.
+    ///    - runtime: TV episode runtime.
     ///    - productionCode: TV episode production code.
     ///    - stillPath: TV episode still image path.
     ///    - crew: TV episode crew.
@@ -98,6 +104,7 @@ public struct TVEpisode: Identifiable, Codable, Equatable, Hashable, Sendable {
         seasonNumber: Int,
         overview: String? = nil,
         airDate: Date? = nil,
+        runtime: Int? = nil,
         productionCode: String? = nil,
         stillPath: URL? = nil,
         crew: [CrewMember]? = nil,
@@ -111,12 +118,41 @@ public struct TVEpisode: Identifiable, Codable, Equatable, Hashable, Sendable {
         self.seasonNumber = seasonNumber
         self.overview = overview
         self.airDate = airDate
+        self.runtime = runtime
         self.productionCode = productionCode
         self.stillPath = stillPath
         self.crew = crew
         self.guestStars = guestStars
         self.voteAverage = voteAverage
         self.voteCount = voteCount
+    }
+
+}
+
+extension TVEpisode {
+
+    // Custom decoder to handle invalid cast/crew entries
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.id = try container.decode(Int.self, forKey: .id)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.episodeNumber = try container.decode(Int.self, forKey: .episodeNumber)
+        self.seasonNumber = try container.decode(Int.self, forKey: .seasonNumber)
+        self.overview = try container.decodeIfPresent(String.self, forKey: .overview)
+        self.airDate = try container.decodeIfPresent(Date.self, forKey: .airDate)
+        self.runtime = try container.decodeIfPresent(Int.self, forKey: .runtime)
+        self.productionCode = try container.decodeIfPresent(String.self, forKey: .productionCode)
+        self.stillPath = try container.decodeIfPresent(URL.self, forKey: .stillPath)
+
+        // Decode crew and skip invalid entries
+        self.crew = try? container.decodeIfPresent([CrewMember].self, forKey: .crew)
+
+        // Decode guest stars and skip invalid entries
+        self.guestStars = try? container.decodeIfPresent([CastMember].self, forKey: .guestStars)
+
+        self.voteAverage = try container.decodeIfPresent(Double.self, forKey: .voteAverage)
+        self.voteCount = try container.decodeIfPresent(Int.self, forKey: .voteCount)
     }
 
 }
